@@ -1,13 +1,12 @@
 <?php
-$host = "127.0.0.1";
-$user = "root";
-$pass = "";
-$db   = "login_app";
+$servername = "127.0.0.1";   
+$username = "root";
+$password = "root";          
+$database = "testdb";        
 
-$conn = new mysqli($host, $user, $pass, $db);
+$conn = new mysqli($servername, $username, $password, $database);
 
 if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
-
 ?>
