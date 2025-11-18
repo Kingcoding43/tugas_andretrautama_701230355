@@ -8,18 +8,45 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testdb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
-    - name: Checkout repository
+    - name: Checkout repo
       uses: actions/checkout@v3
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.1'
+        php-version: 8.1
         extensions: mysqli
 
-    - name: Install PHPUnit
-      run: composer require --dev phpunit/phpunit
+    - name: Install dependencies
+      run: composer install --no-progress
 
-    - name: Run Tests
-      run: vendor/bin/phpunit
+    - name: Wait for MySQL
+      run: |
+        sudo apt-get install -y netcat
+        for i in {1..30}; do
+          nc -z 127.0.0.1 3306 && echo "MySQL UP" && break
+          echo "Waiting for MySQL..."
+          sleep 2
+        done
+
+    - name: Create tables
+      run: |
+        mysql -h 127.0.0.1 -u root -proot testdb < tests/schema.sql
+
+    - name: Run tests
+      run: vendor/bin/phpunit --testdox
